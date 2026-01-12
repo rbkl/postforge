@@ -151,7 +151,9 @@ if not DEBUG:
     USE_X_FORWARDED_HOST = True
     USE_X_FORWARDED_PORT = True
     
-    SECURE_SSL_REDIRECT = True
+    # Disable SSL redirect - Railway handles SSL at the edge
+    # This prevents 400 errors when Railway's proxy forwards HTTP requests
+    SECURE_SSL_REDIRECT = False
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_BROWSER_XSS_FILTER = True
