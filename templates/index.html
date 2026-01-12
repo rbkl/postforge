@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PostForge | AI-Powered LinkedIn Post Generator</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="apple-touch-icon" href="/static/favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Ambient background -->
+        <div class="ambient-bg">
+            <div class="gradient-orb orb-1"></div>
+            <div class="gradient-orb orb-2"></div>
+            <div class="gradient-orb orb-3"></div>
+        </div>
+
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                    <rect width="32" height="32" rx="8" fill="url(#logo-gradient)"/>
+                    <path d="M10 22V10h4v12h-4zm8-8v8h4v-8h-4zm0-4v2h4v-2h-4z" fill="white"/>
+                    <defs>
+                        <linearGradient id="logo-gradient" x1="0" y1="0" x2="32" y2="32">
+                            <stop stop-color="#0077B5"/>
+                            <stop offset="1" stop-color="#00A0DC"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <span>PostForge</span>
+            </div>
+            <nav class="nav-tabs">
+                <button class="nav-tab active" data-tab="generate">Generate</button>
+                <button class="nav-tab" data-tab="profile">Profile</button>
+                <button class="nav-tab" data-tab="history">History</button>
+                <button class="nav-tab" data-tab="prompts">🔍 Prompts</button>
+            </nav>
+            <div class="auth-section" id="auth-section">
+                <span class="user-info" id="user-info" style="display: none;"></span>
+                <button class="btn-auth" id="login-btn">Login</button>
+                <button class="btn-auth" id="logout-btn" style="display: none;">Logout</button>
+            </div>
+        </header>
+
+        <!-- Login/Register Modal -->
+        <div class="modal" id="auth-modal">
+            <div class="modal-backdrop" id="auth-modal-backdrop"></div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="auth-modal-title">Login</h2>
+                    <button class="modal-close" id="auth-modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div id="auth-tabs">
+                        <button class="auth-tab active" data-tab="login">Login</button>
+                        <button class="auth-tab" data-tab="register">Register</button>
+                    </div>
+                    
+                    <form id="login-form" class="auth-form active">
+                        <div class="form-group">
+                            <label for="login-username">Username</label>
+                            <input type="text" id="login-username" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="login-password">Password</label>
+                            <input type="password" id="login-password" required>
+                        </div>
+                        <div class="form-error" id="login-error"></div>
+                        <button type="submit" class="btn-primary btn-block">Login</button>
+                    </form>
+                    
+                    <form id="register-form" class="auth-form">
+                        <div class="form-group">
+                            <label for="register-username">Username</label>
+                            <input type="text" id="register-username" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="register-email">Email (optional)</label>
+                            <input type="email" id="register-email">
+                        </div>
+                        <div class="form-group">
+                            <label for="register-name">Display Name</label>
+                            <input type="text" id="register-name">
+                        </div>
+                        <div class="form-group">
+                            <label for="register-password">Password</label>
+                            <input type="password" id="register-password" required minlength="8">
+                        </div>
+                        <div class="form-error" id="register-error"></div>
+                        <button type="submit" class="btn-primary btn-block">Register</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main content -->
+        <main class="main-content">
+            <!-- Generate Tab -->
+            <section id="generate-tab" class="tab-content active">
+                <div class="two-column">
+                    <!-- Left: Upload & Process -->
+                    <div class="panel upload-panel">
+                        <div class="panel-header">
+                            <h2>Add Content</h2>
+                            <p class="subtitle">Upload a PDF or paste a URL</p>
+                        </div>
+                        
+                        <!-- Input Type Toggle -->
+                        <div class="input-type-toggle">
+                            <button class="input-type-btn active" data-type="pdf" id="input-type-pdf">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <polyline points="14,2 14,8 20,8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                PDF File
+                            </button>
+                            <button class="input-type-btn" data-type="url" id="input-type-url">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                    <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                Web URL
+                            </button>
+                        </div>
+                        
+                        <!-- PDF Upload Zone -->
+                        <div class="upload-zone" id="upload-zone">
+                            <div class="upload-icon">
+                                <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                                    <path d="M24 4L24 32M24 4L16 12M24 4L32 12" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M8 28v12a4 4 0 004 4h24a4 4 0 004-4V28" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                            <p class="upload-text">Drag & drop your PDF here</p>
+                            <p class="upload-subtext">or click to browse</p>
+                            <input type="file" id="file-input" accept=".pdf" hidden>
+                        </div>
+                        
+                        <!-- URL Input Zone -->
+                        <div class="url-input-zone" id="url-input-zone" style="display: none;">
+                            <div class="url-input-wrapper">
+                                <svg class="url-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                    <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                <input type="url" id="url-input" placeholder="Paste article URL (e.g., https://techcrunch.com/...)" />
+                                <button class="btn-primary btn-fetch" id="fetch-url-btn">
+                                    <span class="btn-text">Fetch</span>
+                                    <span class="btn-loading" style="display: none;">
+                                        <svg class="spin" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" stroke-dasharray="31.4 31.4" stroke-linecap="round"/>
+                                        </svg>
+                                    </span>
+                                </button>
+                            </div>
+                            <p class="url-hint">Works with news articles, blog posts, and most web pages</p>
+                        </div>
+
+                        <div class="pdf-info" id="pdf-info" style="display: none;">
+                            <div class="pdf-icon" id="content-icon">📄</div>
+                            <div class="pdf-details">
+                                <h3 id="pdf-title">Paper Title</h3>
+                                <p id="pdf-authors">Authors</p>
+                                <p id="pdf-filename" class="filename"></p>
+                            </div>
+                            <button class="btn-icon" id="clear-pdf" title="Remove">
+                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                    <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div class="extracted-images" id="extracted-images" style="display: none;">
+                            <div class="extracted-images-header">
+                            <h3>Extracted Images</h3>
+                                <span class="images-hint">Click to select • Double-click to enlarge</span>
+                            </div>
+                            <div class="image-grid" id="image-grid"></div>
+                        </div>
+
+                        <!-- Analyze Button -->
+                        <button class="btn-primary btn-analyze" id="analyze-btn" disabled>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            <span>Analyze Content</span>
+                        </button>
+
+                        <!-- Content Analysis Section -->
+                        <div class="content-analysis" id="content-analysis" style="display: none;">
+                            <div class="analysis-header">
+                                <h3>📊 Content Analysis</h3>
+                                <button class="btn-icon btn-collapse" id="collapse-analysis" title="Collapse">
+                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                        <path d="M4 10l4-4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </button>
+                            </div>
+                            
+                            <div class="analysis-content" id="analysis-content">
+                                <!-- Core Finding -->
+                                <div class="analysis-section">
+                                    <h4>🎯 Core Finding</h4>
+                                    <p id="analysis-core-finding" class="analysis-text"></p>
+                                </div>
+
+                                <!-- Document Sections Breakdown -->
+                                <div class="analysis-section">
+                                    <h4>📑 Document Breakdown</h4>
+                                    <div id="analysis-sections" class="document-sections"></div>
+                                </div>
+
+                                <!-- Key Data Points -->
+                                <div class="analysis-section">
+                                    <h4>📈 Key Data Points</h4>
+                                    <div id="analysis-data-points" class="data-points-list"></div>
+                                </div>
+
+                                <!-- Executive Implications -->
+                                <div class="analysis-section">
+                                    <h4>💼 Executive Implications</h4>
+                                    <div id="analysis-implications" class="implications-grid"></div>
+                                </div>
+
+                                <!-- Quotable Facts -->
+                                <div class="analysis-section">
+                                    <h4>💡 Quotable Facts</h4>
+                                    <div id="analysis-quotes" class="quotes-list"></div>
+                                </div>
+
+                                <!-- Methodology -->
+                                <div class="analysis-section collapsible">
+                                    <button class="section-toggle" id="toggle-methodology">
+                                        <span>📋 Methodology & Credibility</span>
+                                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                            <path d="M3 4.5l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </button>
+                                    <div id="analysis-methodology" class="section-content" style="display: none;"></div>
+                                </div>
+                            </div>
+
+                            <div class="analysis-actions">
+                                <p class="analysis-hint">💡 Review the analysis above, then add custom instructions to focus on specific aspects.</p>
+                            </div>
+                        </div>
+
+                        <!-- Custom Instructions -->
+                        <div class="custom-instructions-section" id="custom-instructions-section">
+                            <label for="custom-instructions">
+                                <span class="label-text">Custom Instructions</span>
+                                <span class="label-hint">(optional)</span>
+                            </label>
+                            <textarea id="custom-instructions" placeholder="Add your angle or perspective... e.g., 'Focus on practical applications for startups' or 'Highlight the implications for healthcare'"></textarea>
+                        </div>
+
+                        <!-- Advanced Options Toggle -->
+                        <div class="advanced-options-toggle" id="advanced-toggle">
+                            <button type="button" class="toggle-btn" id="toggle-options-btn">
+                                <svg class="toggle-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                    <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                <span>Generation Options</span>
+                            </button>
+                        </div>
+
+                        <!-- Advanced Options Panel -->
+                        <div class="advanced-options" id="advanced-options" style="display: none;">
+                            <div class="option-group">
+                                <label for="gen-tone">Writing Style</label>
+                                <select id="gen-tone">
+                                    <option value="professional">Professional</option>
+                                    <option value="casual">Casual & Conversational</option>
+                                    <option value="thought_leader">Thought Leadership</option>
+                                    <option value="educational">Educational</option>
+                                    <option value="storytelling">Storytelling</option>
+                                </select>
+                            </div>
+
+                            <div class="option-group">
+                                <label for="gen-length">Post Length</label>
+                                <select id="gen-length">
+                                    <option value="short">Short (< 500 chars)</option>
+                                    <option value="medium" selected>Medium (500-1500 chars)</option>
+                                    <option value="long">Long (1500+ chars)</option>
+                                </select>
+                            </div>
+
+                            <div class="option-row">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="gen-emojis" checked>
+                                    <span>Include Emojis</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="gen-hashtags" checked>
+                                    <span>Include Hashtags</span>
+                                </label>
+                            </div>
+
+                            <div class="option-row">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="use-extracted-image" checked>
+                                <span>Use extracted image</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="generate-ai-image">
+                                <span>Generate AI image</span>
+                            </label>
+                            </div>
+
+                            <div class="option-row">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="include-source-link">
+                                <span>Include source link</span>
+                            </label>
+                            </div>
+
+                            <div class="profile-selector">
+                                <label for="profile-select">Use Saved Profile</label>
+                                <select id="profile-select">
+                                    <option value="">Use options above</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Status Indicator -->
+                        <div class="status-indicator" id="status-indicator" style="display: none;">
+                            <div class="status-steps">
+                                <div class="status-step" data-step="upload">
+                                    <div class="step-icon">
+                                        <svg class="step-pending" width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+                                        <svg class="step-active spinner" width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2" fill="none" stroke-dasharray="40" stroke-dashoffset="10"/></svg>
+                                        <svg class="step-done" width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" fill="currentColor"/><path d="M6 10l3 3 5-5" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                    </div>
+                                    <span class="step-label">Uploading PDF</span>
+                                </div>
+                                <div class="status-connector"></div>
+                                <div class="status-step" data-step="process">
+                                    <div class="step-icon">
+                                        <svg class="step-pending" width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+                                        <svg class="step-active spinner" width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2" fill="none" stroke-dasharray="40" stroke-dashoffset="10"/></svg>
+                                        <svg class="step-done" width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" fill="currentColor"/><path d="M6 10l3 3 5-5" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                    </div>
+                                    <span class="step-label">Extracting content</span>
+                                </div>
+                                <div class="status-connector"></div>
+                                <div class="status-step" data-step="analyze">
+                                    <div class="step-icon">
+                                        <svg class="step-pending" width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+                                        <svg class="step-active spinner" width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2" fill="none" stroke-dasharray="40" stroke-dashoffset="10"/></svg>
+                                        <svg class="step-done" width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" fill="currentColor"/><path d="M6 10l3 3 5-5" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                    </div>
+                                    <span class="step-label">AI Analysis</span>
+                                </div>
+                                <div class="status-connector"></div>
+                                <div class="status-step" data-step="generate">
+                                    <div class="step-icon">
+                                        <svg class="step-pending" width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+                                        <svg class="step-active spinner" width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2" fill="none" stroke-dasharray="40" stroke-dashoffset="10"/></svg>
+                                        <svg class="step-done" width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" fill="currentColor"/><path d="M6 10l3 3 5-5" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                    </div>
+                                    <span class="step-label">Writing post</span>
+                                </div>
+                            </div>
+                            <p class="status-message" id="status-message">Starting...</p>
+                        </div>
+
+                        <button class="btn-primary btn-generate" id="generate-btn" disabled>
+                            <span class="btn-text">Generate Post</span>
+                            <span class="btn-loader" style="display: none;">
+                                <svg class="spinner" width="20" height="20" viewBox="0 0 20 20">
+                                    <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2" fill="none" stroke-dasharray="40" stroke-dashoffset="10"/>
+                                </svg>
+                            </span>
+                        </button>
+                    </div>
+
+                    <!-- Right: Generated Post -->
+                    <div class="panel result-panel">
+                        <div class="panel-header">
+                            <h2>Generated Post</h2>
+                            <p class="subtitle">Your LinkedIn-ready content</p>
+                        </div>
+
+                        <div class="linkedin-preview" id="linkedin-preview">
+                            <div class="preview-placeholder">
+                                <div class="placeholder-icon">✨</div>
+                                <p>Your generated post will appear here</p>
+                                <p class="hint">Upload a paper and click Generate</p>
+                            </div>
+                        </div>
+
+                        <div class="post-actions" id="post-actions" style="display: none;">
+                            <button class="btn-secondary" id="copy-btn">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                    <rect x="5" y="5" width="9" height="9" rx="2" stroke="currentColor" stroke-width="1.5"/>
+                                    <path d="M11 5V3a2 2 0 00-2-2H3a2 2 0 00-2 2v6a2 2 0 002 2h2" stroke="currentColor" stroke-width="1.5"/>
+                                </svg>
+                                Copy Post
+                            </button>
+                            <button class="btn-secondary" id="regenerate-btn">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                    <path d="M14 8A6 6 0 112 8a6 6 0 0112 0z" stroke="currentColor" stroke-width="1.5"/>
+                                    <path d="M14 4v4h-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                Regenerate
+                            </button>
+                        </div>
+
+                        <!-- Refine Post Section -->
+                        <div class="refine-section" id="refine-section" style="display: none;">
+                            <div class="refine-header">
+                                <h3>✏️ Refine Your Post</h3>
+                                <p class="refine-hint">Tell the AI how to improve the post. The paper context is preserved.</p>
+                            </div>
+                            <div class="refine-input-group">
+                                <textarea id="refine-input" placeholder="e.g., 'Make it shorter', 'Add a stronger hook', 'Focus more on the business implications', 'Make it more casual'"></textarea>
+                                <button class="btn-primary btn-refine" id="refine-btn">
+                                    <span class="btn-text">Apply Changes</span>
+                                    <span class="btn-loader" style="display: none;">
+                                        <svg class="spinner" width="20" height="20" viewBox="0 0 20 20">
+                                            <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2" fill="none" stroke-dasharray="40" stroke-dashoffset="10"/>
+                                        </svg>
+                                    </span>
+                                </button>
+                            </div>
+                            <div class="refine-suggestions">
+                                <span class="suggestion-label">Quick suggestions:</span>
+                                <button class="suggestion-chip" data-suggestion="Make it shorter and punchier">Shorter</button>
+                                <button class="suggestion-chip" data-suggestion="Make it longer with more details">Longer</button>
+                                <button class="suggestion-chip" data-suggestion="Make the hook more attention-grabbing">Better hook</button>
+                                <button class="suggestion-chip" data-suggestion="Make it more casual and conversational">More casual</button>
+                                <button class="suggestion-chip" data-suggestion="Add more technical depth">More technical</button>
+                                <button class="suggestion-chip" data-suggestion="Focus on practical applications and ROI">Business focus</button>
+                            </div>
+                        </div>
+
+                        <div class="summary-section" id="summary-section" style="display: none;">
+                            <h3>Paper Summary</h3>
+                            <div class="summary-content" id="summary-content"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Profile Tab -->
+            <section id="profile-tab" class="tab-content">
+                <div class="profile-container">
+                    <div class="panel profile-form-panel">
+                        <div class="panel-header">
+                            <h2>Your Profile</h2>
+                            <p class="subtitle">Customize your posting style</p>
+                        </div>
+
+                        <form id="profile-form">
+                            <div class="form-group">
+                                <label for="profile-name">Name</label>
+                                <input type="text" id="profile-name" placeholder="Your name" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="profile-headline">LinkedIn Headline</label>
+                                <input type="text" id="profile-headline" placeholder="e.g., AI Researcher | Entrepreneur">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="profile-industry">Industry</label>
+                                <input type="text" id="profile-industry" placeholder="e.g., Technology, Healthcare">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="profile-tone">Tone Preference</label>
+                                <select id="profile-tone">
+                                    <option value="professional">Professional</option>
+                                    <option value="casual">Casual & Conversational</option>
+                                    <option value="thought_leader">Thought Leadership</option>
+                                    <option value="educational">Educational</option>
+                                    <option value="storytelling">Storytelling</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="profile-length">Post Length</label>
+                                <select id="profile-length">
+                                    <option value="short">Short (< 500 chars)</option>
+                                    <option value="medium" selected>Medium (500-1500 chars)</option>
+                                    <option value="long">Long (1500+ chars)</option>
+                                </select>
+                            </div>
+
+                            <div class="form-row">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="profile-emojis" checked>
+                                    <span>Include Emojis</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="profile-hashtags" checked>
+                                    <span>Include Hashtags</span>
+                                </label>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="profile-custom-instructions">Default Custom Instructions</label>
+                                <textarea id="profile-custom-instructions" rows="3" placeholder="Your default angle or perspective for posts (e.g., 'Focus on practical applications for startups', 'Highlight implications for healthcare industry')"></textarea>
+                                <p class="form-hint">These instructions will be pre-filled when generating posts. You can override them per post.</p>
+                            </div>
+
+                            <button type="submit" class="btn-primary">Save Profile</button>
+                        </form>
+                    </div>
+
+                    <div class="panel sample-posts-panel">
+                        <div class="panel-header">
+                            <h2>Sample Posts</h2>
+                            <p class="subtitle">Add your best LinkedIn posts to train your style</p>
+                        </div>
+
+                        <div class="sample-post-form">
+                            <textarea id="sample-post-input" placeholder="Paste one of your LinkedIn posts here..." rows="5"></textarea>
+                            <textarea id="sample-post-notes" placeholder="Optional: Notes about engagement (e.g., '500+ likes')" rows="2"></textarea>
+                            <button class="btn-secondary" id="add-sample-btn">Add Sample Post</button>
+                        </div>
+
+                        <div class="sample-posts-list" id="sample-posts-list">
+                            <p class="empty-state">No sample posts yet. Add some to help the AI learn your style!</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- History Tab -->
+            <section id="history-tab" class="tab-content">
+                <div class="panel history-panel">
+                    <div class="panel-header">
+                        <h2>Generated Posts History</h2>
+                        <p class="subtitle">Your previously generated posts</p>
+                    </div>
+
+                    <div class="history-list" id="history-list">
+                        <p class="empty-state">No posts generated yet. Upload a paper to get started!</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Prompts Transparency Tab -->
+            <section id="prompts-tab" class="tab-content">
+                <div class="prompts-container">
+                    <div class="panel prompts-panel">
+                        <div class="panel-header">
+                            <h2>🔍 Prompt Transparency</h2>
+                            <p class="subtitle">See exactly what prompts are sent to the AI. Nothing hidden.</p>
+                        </div>
+
+                        <div class="transparency-intro">
+                            <p>This page shows all the prompts used by PostForge. We believe in full transparency about how AI is used in this tool. These are the actual prompts that get sent to the LLM (currently using <strong id="current-provider">DeepSeek</strong>).</p>
+                        </div>
+
+                        <div class="prompts-list" id="prompts-list">
+                            <!-- Prompts will be loaded here -->
+                            <div class="loading-prompts">Loading prompts...</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Toast notifications -->
+        <div class="toast-container" id="toast-container"></div>
+
+        <!-- Image Modal -->
+        <div class="image-modal" id="image-modal">
+            <div class="modal-backdrop" id="modal-backdrop"></div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="modal-title">Image Preview</h3>
+                    <button class="btn-icon modal-close" id="modal-close">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                            <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <img id="modal-image" src="" alt="Preview">
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-primary" id="copy-image-btn">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <rect x="5" y="5" width="9" height="9" rx="2" stroke="currentColor" stroke-width="1.5"/>
+                            <path d="M11 5V3a2 2 0 00-2-2H3a2 2 0 00-2 2v6a2 2 0 002 2h2" stroke="currentColor" stroke-width="1.5"/>
+                        </svg>
+                        Copy Image to Clipboard
+                    </button>
+                    <button class="btn-secondary" id="download-image-btn">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M8 2v8M8 10L5 7M8 10l3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M2 12v2h12v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Download
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
+
